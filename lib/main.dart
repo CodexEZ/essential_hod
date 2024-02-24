@@ -1,14 +1,15 @@
 import 'package:ess_ward/pages/splash.dart';
 import 'package:ess_ward/res/colors.dart';
 import 'package:flutter/material.dart' hide Colors;
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MainApp());
+  runApp(MainApp());
 }
 
 class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+  MainApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +22,7 @@ class MainApp extends StatelessWidget {
             primary: Colors.primaryColor, secondary: Colors.secondaryColor),
         useMaterial3: false,
       ),
-      home: const SplashScreen(),
+      home: SplashScreen(),
     );
   }
 }

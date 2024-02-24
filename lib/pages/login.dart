@@ -1,19 +1,48 @@
+import 'dart:convert';
+import 'dart:core';
+import 'dart:ffi';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ess_ward/pages/home.dart';
 import 'package:ess_ward/res/colors.dart';
 import 'package:ess_ward/res/images.dart';
 import 'package:flutter/material.dart' hide Colors;
 import 'package:flutter_svg/svg.dart';
+import 'package:http/http.dart' as http;
+import '../res/urls.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  LoginPage({super.key});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final url = "http://$host/token%3D%3Cstr:token%3E/warden/login";
+  double iconSize = 23.0;
+  TextEditingController username = TextEditingController();
+  TextEditingController password = TextEditingController();
+  Icon visibility = Icon(Icons.visibility_off_rounded,size: 23,color: Colors.black,);
+  bool obscure = true;
+  @override
+  void initState(){
+    super.initState();
+    loadData();
+  }
+  void loadData(){
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      var login = prefs.getBool('login') ?? false;
+      if (login){
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>HomePage()));
+      }
+    });
+  }
   @override
   Widget build(BuildContext context) {
+    if(false){
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=> HomePage()));
+    }
     return Scaffold(
       backgroundColor: Colors.white,
       body: Padding(
@@ -39,67 +68,77 @@ class _LoginPageState extends State<LoginPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text(
-                      "Hostal admin",
+                      "Warden Login",
                       style:
                           TextStyle(fontSize: 28, fontWeight: FontWeight.w400),
                     ),
                     const SizedBox(height: 50),
                     TextFormField(
+                      controller: username,
+                      textAlign: TextAlign.justify,
                       keyboardType: TextInputType.text,
                       maxLines: 1,
-                      decoration: const InputDecoration(
+                      decoration:  InputDecoration(
+                          hintText: "Username",
                           isDense: true,
-                          prefixIcon: Padding(
-                            padding: EdgeInsets.only(left: 14, right: 10),
-                            child: Text(
-                              "ID:",
-                              style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w600),
-                            ),
+                          prefixIcon: IconButton(
+                              onPressed: (){},
+                              icon: Icon(Icons.person,size: iconSize,color: Colors.primaryColor,)
                           ),
-                          prefixIconConstraints:
-                              BoxConstraints(minWidth: 0, minHeight: 0),
-                          enabledBorder: OutlineInputBorder(
+                          prefixIconConstraints: BoxConstraints(minWidth: 0, minHeight: 0),
+                          enabledBorder:const OutlineInputBorder(
                               borderSide:
-                                  BorderSide(color: Colors.gray, width: 2),
+                              BorderSide(color: Colors.gray, width: 2),
                               borderRadius:
-                                  BorderRadius.all(Radius.circular(8))),
+                              BorderRadius.all(Radius.circular(8))),
                           border: OutlineInputBorder(
                               borderRadius:
-                                  BorderRadius.all(Radius.circular(8)))),
+                              BorderRadius.all(Radius.circular(8)))),
                     ),
                     const SizedBox(height: 18),
                     TextFormField(
+                      controller:password,
+                      textAlign: TextAlign.justify,
                       keyboardType: TextInputType.text,
-                      obscureText: true,
+                      obscureText: obscure,
                       maxLines: 1,
-                      decoration: const InputDecoration(
-                          isDense: true,
-                          prefixIcon: Padding(
-                            padding: EdgeInsets.only(left: 14, right: 10),
-                            child: Text(
-                              "Pass:",
-                              style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w600),
-                            ),
-                          ),
-                          prefixIconConstraints:
-                              BoxConstraints(minWidth: 0, minHeight: 0),
-                          enabledBorder: OutlineInputBorder(
-                              borderSide:
-                                  BorderSide(color: Colors.gray, width: 2),
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(8))),
-                          border: OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(8)))),
+                      decoration:  InputDecoration(
+                        hintText: "Password",
+                        isDense: true,
+                        prefixIcon: IconButton(
+                            onPressed: (){
+                              setState(() {
+                                if(obscure)
+                                  visibility = Icon(Icons.visibility_rounded,size: iconSize,color: Colors.primaryColor,);
+                                else
+                                  visibility = Icon(Icons.visibility_off_rounded,size: iconSize,color: Colors.primaryColor,);
+                                obscure = !obscure;
+
+                              });
+                            },
+                            icon: visibility
+                        ),
+                        prefixIconConstraints: BoxConstraints(minWidth: 0, minHeight: 0),
+                        enabledBorder: OutlineInputBorder(
+                            borderSide:
+                                BorderSide(color: Colors.gray, width: 2),
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(8))),
+                        border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(8)))),
                     ),
                     const SizedBox(height: 50),
                     GestureDetector(
-                      onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const HomePage())),
+                      onTap: () async {
+                          bool nav = await login(username: username.text, password: password.text,context: context);
+                          print(nav);
+                          if(nav) {
+                            Navigator.push(
+                                context, MaterialPageRoute(
+                                builder: (context) => const HomePage()));
+                          }
+                          },
                       child: Container(
                         height: 75,
                         width: 75,
@@ -120,5 +159,68 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   
+  }
+
+  Future<bool> login({
+    required String username,
+    required String password,
+    required BuildContext context
+}) async{
+    final url = Uri.parse(this.url);
+    final Map<String, dynamic> data = {
+      'id': username,
+      'password': password,
+    };
+
+    try {
+      final response = await http.post(
+        url,
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(data),
+      );
+      print(response.statusCode);
+      if (response.statusCode == 200) {
+        final msg = jsonDecode(response.body);
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        prefs.setBool('login', true);
+        prefs.setString('user', msg['data']['id']);
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${msg["status"]}'),
+              duration: Duration(seconds: 2), // Optional: Set the duration
+              action: SnackBarAction(
+                label: 'Action',
+                onPressed: () {
+                  // Handle action press
+                },
+              ),
+            ));
+        print(prefs.getString('user'));
+        return true;
+        print('Success! Response body: ${response.body}');
+      } else {
+        final msg = jsonDecode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${msg["error"]}'),
+              duration: Duration(seconds: 2), // Optional: Set the duration
+              action: SnackBarAction(
+                label: 'Action',
+                onPressed: () {
+                  // Handle action press
+                },
+              ),
+            )
+        );
+        print('Error! Status code: ${response.statusCode}');
+        print('Response body: ${response.body}');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+
+    return false;
   }
 }

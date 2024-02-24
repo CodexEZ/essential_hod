@@ -1,7 +1,12 @@
-import 'package:ess_ward/components/applicant_card_viewholder.dart';
+
+import 'package:ess_ward/components/application_list.dart';
 import 'package:ess_ward/pages/approve.dart';
 import 'package:ess_ward/res/colors.dart';
+import 'package:ess_ward/res/images.dart';
 import 'package:flutter/material.dart' hide Colors;
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -11,64 +16,48 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  String? user;
+  @override
+  void initState(){
+    super.initState();
+    loadData();
+  }
+  void loadData(){
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      setState(() {
+        user = prefs.getString('user')??'none';
+      });
+    });
+  }
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 50),
-            const Padding(
-              padding: EdgeInsets.only(top: 50, bottom: 40),
-              child: Center(
-                child: Text(
-                  "Applicants",
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                ),
+    return DefaultTabController(
+      initialIndex: 0,
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          shadowColor: Colors.transparent,
+          backgroundColor: Colors.white,
+          automaticallyImplyLeading: false,
+          title: Center(child: SvgPicture.asset(essentialLogo),),
+          bottom:TabBar(
+            tabs: <Widget>[
+              Tab(
+                icon: Text("Requests",style:  GoogleFonts.poppins(textStyle: TextStyle(color: Colors.primaryColor)),),
               ),
+              Tab(
+                icon: Text("History",style: GoogleFonts.poppins(textStyle: TextStyle(color: Colors.primaryColor)),),
+              ),
+            ],
+          ),
+        ),
+        body: TabBarView(
+          children: <Widget>[
+            Applications(user:user ,),
+            Center(
+              child: Text("Past leaves"),
             ),
-            Expanded(
-              child: ListView(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                children: [
-                  const Text(
-                    "25 feb 2024",
-                    style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.gray,
-                        fontWeight: FontWeight.w600),
-                  ),
-                  ListView.separated(
-                      shrinkWrap: true,
-                      padding: const EdgeInsets.symmetric(vertical: 20),
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemBuilder: (context, index) {
-                        return GestureDetector(
-                          onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const ApprovelPage(
-                                      id: "leave id from server"))),
-                          child: const ApplicantCardViewHolder(
-                            id: "01UG21020037",
-                            fullname: "Pratyush Behera",
-                            branch: "BTech",
-                            course: "CSE",
-                            semester: "21",
-                          ),
-                        );
-                      },
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(height: 14),
-                      itemCount: 5)
-                ],
-              ),
-            )
           ],
         ),
       ),
