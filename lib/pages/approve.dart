@@ -1,6 +1,6 @@
-import 'package:ess_ward/components/applicant_card_viewholder.dart';
-import 'package:ess_ward/pages/reason.dart';
-import 'package:ess_ward/res/colors.dart';
+import 'package:ess_hod/components/applicant_card_viewholder.dart';
+import 'package:ess_hod/pages/reason.dart';
+import 'package:ess_hod/res/colors.dart';
 import 'package:flutter/material.dart' hide Colors;
 
 class ApprovelPage extends StatefulWidget {

@@ -1,4 +1,4 @@
-import 'package:ess_ward/res/images.dart';
+import 'package:ess_hod/res/images.dart';
 import 'package:flutter/material.dart' hide Colors;
 
 class ProfileImageHolder extends StatelessWidget {

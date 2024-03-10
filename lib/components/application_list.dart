@@ -1,6 +1,7 @@
-import 'package:ess_ward/components/ViewLeave.dart';
+import 'package:ess_hod/components/ViewLeave.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_neumorphic/flutter_neumorphic.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
@@ -27,8 +28,9 @@ class _ApplicationsState extends State<Applications> {
   void initState(){
     super.initState();
   }
-  loadData(String? user,{String query = "pending"}) async {
-    String url = "http://$host/token=<str:token>/warden/leave/view/id=${widget.user}/query=$query";
+  loadData(String? user,{String query = "pending",int start = 0,int end = 100}) async {
+    String url = "http://$host/token=<str:token>/hod/leave/view/id=${widget.user}/query=$query";
+    print(url);
     try {
       final response = await http.get(
         Uri.parse(url),
@@ -43,8 +45,6 @@ class _ApplicationsState extends State<Applications> {
           isLoading = false;
         });
       }
-
-
     }
     catch(e){
       print(e);
@@ -56,32 +56,32 @@ class _ApplicationsState extends State<Applications> {
       loadData(widget.user);
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: AppBar(
-        shadowColor: Colors.transparent,
-        automaticallyImplyLeading: false,
-        backgroundColor: Colors.white,
-        title: Container(
-          height: 50,
-          child: TextFormField(
-            style: GoogleFonts.poppins(),
-            decoration: InputDecoration(
-              prefixIcon: IconButton(
-                onPressed: () {  },
-                icon: Icon(Icons.search),
-              ),
-              hintText: "Search applicant",
-              hintStyle: GoogleFonts.poppins(),
-              border: OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: Colors.grey,
-                  width: 5
-                ),
-                borderRadius: BorderRadius.circular(15)
-              )
-            ),
-          ),
-        ),
-      ),
+      // appBar: AppBar(
+      //   shadowColor: Colors.transparent,
+      //   automaticallyImplyLeading: false,
+      //   backgroundColor: Colors.white,
+      //   title: Container(
+      //     height: 50,
+      //     child: TextFormField(
+      //       style: GoogleFonts.poppins(),
+      //       decoration: InputDecoration(
+      //         prefixIcon: IconButton(
+      //           onPressed: () {  },
+      //           icon: Icon(Icons.search),
+      //         ),
+      //         hintText: "Search applicant",
+      //         hintStyle: GoogleFonts.poppins(),
+      //         border: OutlineInputBorder(
+      //           borderSide: BorderSide(
+      //             color: Colors.grey,
+      //             width: 5
+      //           ),
+      //           borderRadius: BorderRadius.circular(15)
+      //         )
+      //       ),
+      //     ),
+      //   ),
+      // ),
       body: RefreshIndicator(
         onRefresh: () async {
             await loadData(widget.user);
@@ -89,7 +89,7 @@ class _ApplicationsState extends State<Applications> {
         child: ListView.builder(
           itemCount: leaves.length,
           itemBuilder: (context, index){
-            print(leaves[index].phone);
+            print(leaves);
             bool expand = false;
 
             return Padding(
@@ -112,7 +112,7 @@ class _ApplicationsState extends State<Applications> {
                     ),
                       child:ClipOval(
                         child: Image.network(
-                            "http://$host/token=%3Cstr:token%3E/user=${leaves[index].student}/getImage",
+                            "http://$host/token=%3Cstr:token%3E/user=${leaves[index].student?.pfp}/getImage",
                           fit: BoxFit.cover,
                           errorBuilder: (context,e,s){
                                 return Icon(Icons.person,color: Colors.grey.withOpacity(0.4),size: 40,);
@@ -124,22 +124,29 @@ class _ApplicationsState extends State<Applications> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(leaves[index].name!,style: GoogleFonts.poppins(textStyle:TextStyle(fontSize: 17,fontWeight: FontWeight.w600) ),),
+                        Text("${leaves[index].student?.name?.toUpperCase()}",style: GoogleFonts.poppins(textStyle:TextStyle(fontSize: 17,fontWeight: FontWeight.w600) ),),
                         SizedBox(height: 2,),
-                        Container(
-                          padding: EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(3)
-                          ),
-                          child: Row(
-                            children: [
-                              Text(leaves[index].branch! as String,style: GoogleFonts.poppins(),),
-                              Text(","),
-                              Text(leaves[index].batch!,style: GoogleFonts.poppins(),),
-                            ],
-                          ),
+                        Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(3)
+                              ),
+                              child: Row(
+                                children: [
+                                  Text(leaves[index].profile?.branch as String,style: GoogleFonts.poppins(),),
+                                  Text(","),
+                                  Text(leaves[index].profile?.batch as String,style: GoogleFonts.poppins(),),
 
+                                ],
+                              ),
+
+                            ),
+                            SizedBox(width: 9,),
+                            Text("Leave ID : ${leaves[index].id}",style: GoogleFonts.poppins(),)
+                          ],
                         ),
                         SizedBox(height:10),
                         isExpandedList[index]?expandedView(leaves[index]):SizedBox()
@@ -183,21 +190,32 @@ class _ApplicationsState extends State<Applications> {
           Text("Reason : ",style:GoogleFonts.poppins(textStyle: TextStyle(fontSize: 16,fontWeight: FontWeight.bold))),
           Text("${model.reason}",softWrap: true,style:GoogleFonts.poppins(textStyle: TextStyle(fontSize: 16))),
           SizedBox(height: 5,),
+          Row(
+          children: [
+                model.warden_decision == true || model.warden_decision == null ? Text("Warden :",style: GoogleFonts.poppins(),):SizedBox(),
+                model.warden_decision == null ? Icon(Icons.access_time,size: 17,color: Colors.orange,): model.warden_decision == true?Icon(Icons.verified,size: 15,color: Colors.green,):SizedBox()
+              ],
+          ),
+          SizedBox(height: 10,),
           Container(
             width: 150,
-            child: TextButton(
-              style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all(Colors.green)
+            child: NeumorphicButton(
+              style: NeumorphicStyle(
+                color: Colors.green,
+                shadowDarkColor: Colors.black,
+                shadowLightColor: Colors.green,
+                shadowDarkColorEmboss: Colors.black,
+                shadowLightColorEmboss: Colors.white
               ),
-              onPressed: (){if(model.phone != null){
-                _launchDialer(model.phone!);
+              onPressed: (){if(model.profile?.parentNo != null){
+                _launchDialer(model.profile?.parentNo as String);
                 }
               },
               child: Row(
                 children: [
                   Icon(Icons.add_call,color: Colors.white,),
                   SizedBox(width: 10,),
-                  Text(model.phone??"Not available",style: GoogleFonts.poppins(textStyle: TextStyle(color: Colors.white)),)
+                  Text(model.profile?.parentNo??"Not available",style: GoogleFonts.poppins(textStyle: TextStyle(color: Colors.white)),)
                 ],
               ),
             ),
@@ -205,26 +223,36 @@ class _ApplicationsState extends State<Applications> {
           SizedBox(height: 10,),
           Row(
             children: [
-              TextButton(
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all(Colors.green)
-                ),
+              NeumorphicButton(
+                  style:const NeumorphicStyle(
+                      color: Colors.white,
+                      shadowDarkColor: Colors.black,
+                      shadowLightColor: Colors.green,
+                      intensity: 0.6,
+                      shadowDarkColorEmboss: Colors.black,
+                      shadowLightColorEmboss: Colors.green
+                  ),
                   onPressed: ()async{
                   await leaveAction( action: 'false',id: "${model.id}");
                   },
-                  child: Text("Approve",style: GoogleFonts.poppins(textStyle: TextStyle(color: Colors.white)),)
+                  child: Text("Approve",style: GoogleFonts.poppins(textStyle: TextStyle(color: Colors.green)),)
               ),
-              SizedBox(width: 20,),
-              TextButton(
-                  style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all(Colors.red)
+              const SizedBox(width: 20,),
+              NeumorphicButton(
+                  style:const NeumorphicStyle(
+                  color: Colors.white,
+                  shadowDarkColor: Colors.black,
+                  shadowLightColor: Colors.red,
+                  intensity: 0.6,
+                  shadowDarkColorEmboss: Colors.black,
+                  shadowLightColorEmboss: Colors.white
                   ),
                   onPressed: ()async{
                     await showBottomDialog(model);
                     //await leaveAction( action: 'true',id: "${model.id}");
 
                   },
-                  child: Text("Reject",style: GoogleFonts.poppins(textStyle: TextStyle(color: Colors.white)))
+                  child: Text("Reject",style: GoogleFonts.poppins(textStyle: TextStyle(color: Colors.red)))
               )
             ],
           )
@@ -234,7 +262,7 @@ class _ApplicationsState extends State<Applications> {
   }
 
   Future<void> leaveAction( {required String action,required String id,String reason = "none"})async {
-    String url = "http://$host/token=<str:token>/warden/leave/takeAction/warden=${widget.user}/leave_id=$id/deny=$action/reason=$reason";
+    String url = "http://$host/token=<str:token>/hod/leave/takeAction/hod=${widget.user}/leave_id=$id/deny=$action/reason=$reason";
 
     try{
       final response = await http.post(

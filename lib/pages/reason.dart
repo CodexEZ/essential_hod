@@ -1,5 +1,5 @@
-import 'package:ess_ward/data/reason.dart';
-import 'package:ess_ward/res/colors.dart';
+import 'package:ess_hod/data/reason.dart';
+import 'package:ess_hod/res/colors.dart';
 import 'package:flutter/material.dart' hide Colors;
 
 class ReasonPage extends StatefulWidget {

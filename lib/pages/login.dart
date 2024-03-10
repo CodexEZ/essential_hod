@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'dart:core';
 import 'dart:ffi';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:ess_ward/pages/home.dart';
-import 'package:ess_ward/res/colors.dart';
-import 'package:ess_ward/res/images.dart';
+import 'package:ess_hod/pages/home.dart';
+import 'package:ess_hod/res/colors.dart';
+import 'package:ess_hod/res/images.dart';
 import 'package:flutter/material.dart' hide Colors;
 import 'package:flutter_svg/svg.dart';
 import 'package:http/http.dart' as http;
@@ -18,7 +18,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final url = "http://$host/token%3D%3Cstr:token%3E/warden/login";
+  final url = "http://$host/token=<str:token>/hod/login";
   double iconSize = 23.0;
   TextEditingController username = TextEditingController();
   TextEditingController password = TextEditingController();
@@ -68,7 +68,7 @@ class _LoginPageState extends State<LoginPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text(
-                      "Warden Login",
+                      "H.O.D Login",
                       style:
                           TextStyle(fontSize: 28, fontWeight: FontWeight.w400),
                     ),
@@ -180,12 +180,15 @@ class _LoginPageState extends State<LoginPage> {
         },
         body: jsonEncode(data),
       );
-      print(response.statusCode);
+      print(response.body);
       if (response.statusCode == 200) {
         final msg = jsonDecode(response.body);
         SharedPreferences prefs = await SharedPreferences.getInstance();
         prefs.setBool('login', true);
         prefs.setString('user', msg['data']['id']);
+        prefs.setString('branch',msg['branch']);
+        prefs.setString('college', msg['college']);
+
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('${msg["status"]}'),
@@ -199,7 +202,6 @@ class _LoginPageState extends State<LoginPage> {
             ));
         print(prefs.getString('user'));
         return true;
-        print('Success! Response body: ${response.body}');
       } else {
         final msg = jsonDecode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(

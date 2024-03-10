@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'package:ess_ward/pages/login.dart';
-import 'package:ess_ward/res/colors.dart';
-import 'package:ess_ward/res/images.dart';
+import 'package:ess_hod/pages/login.dart';
+import 'package:ess_hod/res/colors.dart';
+import 'package:ess_hod/res/images.dart';
 import 'package:flutter/material.dart' hide Colors;
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';

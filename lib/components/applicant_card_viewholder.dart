@@ -1,5 +1,5 @@
-import 'package:ess_ward/components/profile_image_holder.dart';
-import 'package:ess_ward/res/colors.dart';
+import 'package:ess_hod/components/profile_image_holder.dart';
+import 'package:ess_hod/res/colors.dart';
 import 'package:flutter/material.dart' hide Colors;
 
 class ApplicantCardViewHolder extends StatelessWidget {
